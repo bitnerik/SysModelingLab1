@@ -10,12 +10,12 @@ namespace SystemModelingLab1
         public double Next
         {
             get => next;
-            set => next = Math.Round(value, 1, MidpointRounding.AwayFromZero);
+            set => next = Math.Round(value, Const.roundTo, MidpointRounding.AwayFromZero);
         }
         public double ProcessTime
         {
             get => processTime;
-            set =>  processTime = Math.Round(value, 1, MidpointRounding.AwayFromZero);
+            set =>  processTime = Math.Round(value, Const.roundTo, MidpointRounding.AwayFromZero);
         }
 
         public Transact(TypeEnum type, double t)
@@ -29,11 +29,11 @@ namespace SystemModelingLab1
         {
             if (type == TypeEnum.L1)
             {
-                return MyRandom.NormalDistribution();
+                return MyRandom.Normal;
             }
             else
             {
-                return MyRandom.ExpDistribution(2);
+                return MyRandom.Exp;
             }
         }
 
@@ -41,11 +41,11 @@ namespace SystemModelingLab1
         {
             if (type == TypeEnum.L1)
             {
-                return MyRandom.ErlandDistrib();
+                return MyRandom.Erl;
             }
             else
             {
-                return MyRandom.ExpDistribution(0.5);
+                return MyRandom.Puas;
             }
         }
     }

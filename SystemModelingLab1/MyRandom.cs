@@ -1,48 +1,92 @@
 ﻿using System;
+using System.IO;
+using SystemModelingLab1;
 
 public static class MyRandom
 {
-	static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
+    static readonly Random Rnd = new Random((int)DateTime.Now.Ticks);
     public static double RandomDouble
     {
-        get { return GetRandomDouble(); }
+        get { return NotZero(Rnd.NextDouble); }
     }
 
-    public static double GetRandomDouble ()
+    public static double Normal
     {
-        double rndDouble = 0; 
-            while (rndDouble == 0) rndDouble = Rnd.NextDouble();
-
-        return rndDouble;
+        get { return NotZero(NormalDistribution); }
     }
+
+    public static double Exp
+    {
+        get { return NotZero(ExpDistribution, 2); }
+    }
+
+    public static double Erl
+    {
+        get { return NotZero(ErlandDistrib); }
+    }
+
+    public static double Puas
+    {
+        get { return NotZero(ExpDistribution, 0.5); }
+    }
+
 
     public static double NormalDistribution()
     {
-        double randomNorm = 0;
-        while (randomNorm < 0.05) randomNorm = 12.0 + 2.0 * Math.Sin(2 * Math.PI * RandomDouble) * Math.Sqrt(-2 * Math.Log(RandomDouble));
+        var randomNorm = 12.0 + 2.0 * Math.Sin(2 * Math.PI * RandomDouble) * Math.Sqrt(-2 * Math.Log(RandomDouble));
 
         return randomNorm;
     }
 
-    public static double ExpDistribution(double alpha)
+    public static double ExpDistribution(double lam)
     {
-        double exp = 0;
-        while (exp < 0.05) exp = Math.Log((double)1 - RandomDouble) / (-alpha);
+        var exp = -Math.Log(RandomDouble) / lam;
 
         return exp;
     }
 
     public static double ErlandDistrib()
     {
-        double erland = 0, length = 3, alpha = 0.25;
+        double erland = 0, length = 3, lam = 0.25;
 
-        for (int i = 0; i <= length; i++)
+        for (int i = 0; i < length; i++)
         {
-            erland += ExpDistribution(alpha);
+            erland += ExpDistribution(lam);
         }
 
-        while (erland < 0.05) erland = ErlandDistrib();
-
         return erland;
+    }
+
+    public static void RndTest()
+    {
+        var datArr = new string[1000];
+
+        for (int i = 0; i < 1000; i++)
+        {
+
+            datArr[i] = NormalDistribution().ToString() + "," +
+            ExpDistribution(2).ToString() + "," +
+            ErlandDistrib().ToString() + "," +
+            ExpDistribution(3).ToString() + "," +
+            RandomDouble.ToString();
+        }
+
+        File.WriteAllLines("RndDat.csv", datArr);
+    }
+
+    public static double NotZero(Func<double> func)
+    {
+        double result = 0;
+        while (result < Const.notLessThan) result = func.Invoke();
+
+        return result;
+    }
+
+    public static double NotZero(Func<double, double> func, double lam)
+    {
+        double result = 0;
+        while (result < Const.notLessThan) result = func.Invoke(lam);
+
+        return result;
     }
 }

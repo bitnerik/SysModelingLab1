@@ -33,7 +33,7 @@ namespace SystemModelingLab1
             excel.Quit();
         }
 
-        private void CreateDocument()
+        public void CreateDocument()
         {
             try
             {
@@ -52,6 +52,10 @@ namespace SystemModelingLab1
                 worksheet.Cells[1, 6] = "S";
                 worksheet.Cells[1, 7] = "N";
                 worksheet.Cells[1, 8] = "Q";
+                worksheet.Cells[1, 9] = "Free time coeff.";
+                worksheet.Cells[1, 10] = "Average queue count";
+
+  
             }
             catch (Exception ex)
             {

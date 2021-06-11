@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Office.Interop.Excel;
 
 namespace SystemModelingLab1
 {
@@ -19,17 +16,33 @@ namespace SystemModelingLab1
         public Transact transact1;
         public Transact transact2;
         public Excel excel;
+        public List<int> queueCount = new List<int>();
+        public double serverFreeTime = 0;
+        public int averageQueueCount = 0;
+        public double freeTimeCoeff = 0;
 
         public double H
         {
             get => h;
-            set => h = Math.Round(value, 1, MidpointRounding.AwayFromZero);
+            set => h = Math.Round(value, Const.roundTo, MidpointRounding.AwayFromZero);
         }
 
         public double T
         {
             get => t;
-            set => t = Math.Round(value, 1, MidpointRounding.AwayFromZero);
+            set => t = Math.Round(value, Const.roundTo, MidpointRounding.AwayFromZero);
+        }
+
+        public double ServerFreeTime
+        {
+            get => serverFreeTime;
+            set => serverFreeTime = Math.Round(value, Const.roundTo, MidpointRounding.AwayFromZero);
+        }
+
+        public double FreeTimeCoeff
+        {
+            get => freeTimeCoeff;
+            set => freeTimeCoeff = Math.Round(value, Const.roundTo, MidpointRounding.AwayFromZero);
         }
 
         public Main()
@@ -39,12 +52,15 @@ namespace SystemModelingLab1
             q = new List<Transact>();
             excel = new Excel();
         }
+
         public void Start()
         {
             WriteInFile(transact1, transact2);
 
             while (T <= 500)
             {
+                queueCount.Add(q.Count);
+
                 if (T == H)
                 {
                     if (q.Count == 0)
@@ -53,13 +69,13 @@ namespace SystemModelingLab1
                         s = false;
                     }
                     else
-                     {
+                    {
                         var transact = q.First();
                         H = T + transact.ProcessTime;
                         s = true;
                         q.Remove(transact);
 
-                        WriteInFile(transact.Type);
+                        //WriteInFile();
                     }
                 }
 
@@ -70,13 +86,14 @@ namespace SystemModelingLab1
                     {
                         q.Add(transact1);
                         transact1 = new Transact(TypeEnum.L1, T);
+                        WriteInFile();
                     }
                     else
                     {
                         s = true;
                         H = T + transact1.ProcessTime;
                         transact1 = new Transact(TypeEnum.L1, T);
-                        WriteInFile(transact1.Type);
+                        WriteInFile();
                     }
                 }
                 if (T == transact2.Next)
@@ -85,13 +102,14 @@ namespace SystemModelingLab1
                     {
                         q.Add(transact2);
                         transact2 = new Transact(TypeEnum.L2, T);
+                        WriteInFile();
                     }
                     else
                     {
                         s = true;
                         H = T + transact2.ProcessTime;
                         transact2 = new Transact(TypeEnum.L2, T);
-                        WriteInFile(transact2.Type);
+                        WriteInFile();
                     }
                 }
                 if (T == tEnd)
@@ -100,8 +118,14 @@ namespace SystemModelingLab1
                     break;
                 }
 
-                T = Math.Round(T + 0.1, 1);
+                if (!s) ServerFreeTime += Const.notLessThan;
+                T = Math.Round(T + Const.notLessThan, Const.roundTo);
+
+                averageQueueCount = queueCount.Sum() / queueCount.Count;
+                freeTimeCoeff = ServerFreeTime / T * 100;
+
             }
+
 
             excel.SaveAndClose();
         }
@@ -110,7 +134,7 @@ namespace SystemModelingLab1
         {
             var dataRow = new string[]
             {
-                "", T.ToString(), transactL1.Next.ToString(), transactL2.Next.ToString(), H.ToString(), s.ToString(), q.Count.ToString(), q.Count.ToString()
+                "", T.ToString(), transactL1.Next.ToString(), transactL2.Next.ToString(), H.ToString(), s.ToString(), q.Count.ToString(), string.Join(", ", q.Select(x => x.Type.ToString())), FreeTimeCoeff.ToString() + '%', averageQueueCount.ToString()
             };
             excel.WriteRow(dataRow);
         }
@@ -134,6 +158,18 @@ namespace SystemModelingLab1
             {
                 eventType.ToString(), T.ToString(), tr1.Next.ToString(), tr2.Next.ToString(), H.ToString(), s.ToString(), q.Count.ToString(), string.Join(", ", q.Select(x => x.Type.ToString()))
             };
+            excel.WriteRow(dataRow);
+        }
+
+        public void WriteInFile()
+        {
+            var eventType = transact1.Next < transact2.Next ? TypeEnum.L1 : TypeEnum.L2;
+
+            var dataRow = new string[]
+            {
+                eventType.ToString(), T.ToString(), transact1.Next.ToString(), transact2.Next.ToString(), H.ToString(), s.ToString(), q.Count.ToString(), string.Join(", ", q.Select(x => x.Type.ToString())), FreeTimeCoeff.ToString() + '%', averageQueueCount.ToString()
+            };
+
             excel.WriteRow(dataRow);
         }
     }
